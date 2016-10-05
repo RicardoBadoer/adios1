@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>IRIC 1.1</title>
+        <script type="text/javascript">
+            var api = "http://localhost:14265";
+
+            function display(text, color) {
+                document.getElementById("output").innerHTML += "<p style='color: #" + (color ? (color == 1 ? "0FF" : (color == 2 ? "0F0" : "FF0")) : "FFF") + (color ? ";" : "; cursor: pointer;") + "'" + (color ? "" : " onclick='process(innerHTML);'") + ">" + text + "</p>";
+                scrollTo(0, document.body.scrollHeight);
+            }
+
+            function process(input) {
+                input = input.trim();
+                if (input.length == 0) {
+                    return;
+                }
+                display(input);
+                var tokens = input.split(" ");
+                switch (tokens[0]) {
+
+                    case "getapi": {
+                        display(api, 1);
+                    } break;
+
+                    case "help": {
+                        display("getapi<br />setapi url", 1);
+                    } break;
+
+                    case "setapi": {
+                        if (tokens.length < 2) {
+                            display("'Url' has not been specified", 3);
+                        } else {
+                            api = tokens[1];
+                            display("OK", 1);
+                        }
+                    } break;
+
+                    default: {
+                        if (input.charAt(0) != "{" || input.charAt(input.length - 1) != "}") {
+                            display("Incorrect command", 3);
+                        } else {
+                            var request = new XMLHttpRequest();
+                            request.open("POST", api);
+                            request.onreadystatechange = function() {
+                                if (this.readyState == 4) {
+                                    var jsonObject = JSON.parse(this.responseText);
+                                    display(this.responseText, jsonObject.error || jsonObject.exception ? 3 : 2);
+                                }
+                            };
+                            request.send(input);
+                        }
+                    }
+                }
+            }
+        </script>
+    </head>
+    <body style="background-color: #000020; color: #FFF; margin: 0; padding: 0;" onload="document.getElementById('input').focus();">
+        <div id="output" style="left: 0; padding: 10px; position: absolute; top: 0;"><br /><p style="color: #808080;">Type "help" to get help</p></div>
+        <input type="text" id="input" style="border-style: none; box-sizing: border-box; left: 0; margin: 0; padding: 10px; position: fixed; top: 0; width: 100%;" onkeydown="if (event.keyCode == 13) { process(value); value = ''; } else if (event.keyCode == 27) { value = ''; }" />
+    </body>
+</html>
